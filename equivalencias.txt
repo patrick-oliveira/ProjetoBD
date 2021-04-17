@@ -1,0 +1,325 @@
+TIPOS
+
+NOME : CHAR(100)
+TEXTO : CHAR(200)
+DATA : CHAR(10)
+LOCAL : CHAR(70)
+
+
+ESQUEMAS
+
+sindrome_respiratória
+entregas
+locais_estabelecimentos
+registros
+
+
+
+registro - registro_de_ocupação
+código : INT (gerado na hora da inserção)
+data - dataNotificacao : string (??)
+clinica_ocup_suspeita - ocupacaoSuspeitoCli : INT
+clinica_ocup_confirmado - ocupacaoConfirmadoCli : INT
+uti_ocup_suspeita - ocupacaoSuspeitoUti : INT
+uti_ocup_confirmado - ocupacaoConfirmadoUti : INT
+obitos_suspeita - saidaSuspeitaObitos : INT
+obitos_confirmado - saidaConfirmadaObitos : INT
+alta_suspeita - saidaSuspeitaAltas : INT
+alta_confirmado - saidaConfirmadaAltas : INT
+
+
+informações_globais_mortes
+país : INT (chave estrangeira - país)
+data - date : DATA
+novos - new_deaths : INT
+quantidade_total - total_deaths: INT
+novos_por_milhão - new_deaths_per_million : FLOAT
+total_por_milhão - total_deaths_per_million : FLOAT
+
+informações_globais_casos
+país : INT (chave estrangeira - país)
+data - date : DATA
+novos - new_cases : INT
+quantidade_total - total_cases : INT
+novos_por_milhão - new_cases_per_million : FLOAT
+total_por_milhão - total_cases_per_million : FLOAT 
+
+
+informações_globais_testes
+país : INT (chave estrangeira - país)
+data - date : DATA
+novos - new_tests : INT
+quantidade_total - total_tests : INT 
+novos_por_milhar - new_tests_per_thousand : FLOAT
+total_por_milhar - total_tests_per_thousand : FLOAT
+taxa_positivos - positive_rate : FLOAT
+testes_por_casos - tests_per_case : FLOAT
+unidades - tests_units : INT 
+
+informações_globais_vacinações
+país : INT (chave estrangeira - país)
+data - date : DATA
+novos - new_vaccinations : INT
+quantidade_total - total_vaccinations : INT
+total_por_centena - total_vaccinations_per_handred : FLOAT
+pessoas_total_vac - people_vaccinated : INT
+pessoas_total_vac_por_cen - people_vaccinated_per_hundred : FLOAT
+
+
+informações_globais_hospitalizações
+país : INT (chave estrangeira - país)
+data - date : DATA
+novos : INT
+quantidade_total - hosp_patients : INT
+pacientes_UTI - icu_patients : INT
+pacientes_UTI_por_milhão - icu_patients_per_million : FLOAT
+admissões_semanais_UTI - weekly_icu_admissions : INT
+admissões_semanais - weekly_hosp_admissions : INT
+
+
+registro_diário_cartório
+data - date : DATA
+estado - state : INT (chave estrangeira - estado)
+total - (new_deaths_total_2019 + new_deaths_total_2020) : INT
+indeterminado - (new_deaths_indeterminate_2019 + new_deaths_indeterminate_2020) : INT
+septicemia - (new_deaths_septicemia_2019 + new_deaths_septicemia_2020) : INT
+sars - (new_deaths_sars_2019 + new_deaths_septicemia_2020) : INT 
+falha_respirador - (new_deaths_respiratory_failure_2019 + new_deaths_respiratory_failure_2020) : INT
+pneumonia - (new_deaths_pneumonia_2019 + new_deaths_pneumonia_2020) 
+
+registro_acumulado_cartório
+data - date : DATA
+estado - state : INT (chave estrangeira - estado)
+total - (deaths_total_2019 + deaths_total_2020) : INT 
+indeterminado - (deaths_indeterminate_2019 + deaths_indeterminate_2020) : INT 
+septicemia - (deaths_septicemia_2019 + deaths_septicemia_2020) : INT 
+sars - (deaths_sars_2019 + deaths_sars_2020) : INT 
+falha_respirador - (deaths_respiratory_failure_2019 + deaths_respiratory_failure_2020) : INT 
+pneumonia - (deaths_pneumonia_2019 + deaths_pneumonia_2020) : INT 
+
+
+relatório_covid
+data - date : DATA
+ente_federativo : INT (chave estrangeira - ente_federativo)
+mortes - deaths : INT
+casos_confirmados - confirmed : INT
+pedidos_por_leito : INT
+casos_confirmados_100k : FLOAT
+taxa_mortalidade : FLOAT 
+
+
+estabelecimento_de_saude - cnes
+cnes - CO_CNES : CHAR(7)
+nome - NO_FANTASIA : NOME
+CEP - CO_CEP : INT
+rua - NO_LOGRADOURO : NOME
+bairro - NO_BAIRRO : NOME
+número - NU_ENDERECO : INT
+complemento - NO_COMPLEMENTO : TEXTO
+município : NOME
+estado : NOME
+
+*** Usar o ViaCEP para preencher município e estado pelo CEP
+*** passar todas as informações para letras minúsculas
+
+
+Entregas
+
+registro_entrega
+código : INT
+ítem : INT (chave estrangeira)
+status: BOOL
+destinatário: NOME
+valor_total: FLOAT
+quantidade: ITN
+data_entrega: DATA
+
+item
+ID: INT
+fornecedor: NOME
+descrição: TEXTO
+nome: NOME
+tipo: NOME
+vinculo: NOME
+
+
+A modelagem das entregas foi feita reunindo os dados de diferentes tipos de entregas (medicamentos, respiradores e outros ítens). Cada tabela, sendo relativa a um tipo de entrega diferente, diferia das outras em alguns atributos, e o modelo foi feito de modo a tentar sintetizar todas estas tabelas em uma estrutura só. Para isso, separou-se os dados dos ítens do registro das entregas, assim seria possível criar uma base de dados de todos os tipos diferentes de ítens que foram entregues e cada registro de entrega teria as informações de quantidade, valor, etc., apenas fazendo referência ao ítem entregue.
+
+Originalmente, algumas entregas estavam destinadas a apenas um estado em específico, enquanto outras possuíam informações mais detalhadas, especificando também o município de entrega ou até mesmo o destinatário. Os campos para informações mais detalhadas foram incluídas no modelo, admitindo que em alguns casos estes campos permaneceriam nulos. As informações de destino foram colocadas na relação "Entrega Realizada" que faz o cruzamento entre os códigos de cada registro de entrega e o seu destino. 
+
+
+Entidade Federativa
+
+ente_federativo
+ID: INT
+nome : NOME
+população: INT
+densidade: FLOAT
+
+país
+ID: INT (chave estrangeira)
+
+estado:
+ID: INT (chave estrangeira)
+
+município:
+ID: INT (chave estrangeira)
+estado: INT (chave estrangeira)
+
+Os municípios, estados e países foram modelados como especializações de uma entidade "Entidade Federativa", que possui os atributos comuns destes três tipos. A reunião destes três tipos em uma única entidade é necessária para simplificar o modelo, que passa a levar em conta o fato de que algumas entidades podem referenciar, por exemplo, um estado ou um município. Este é o caso das informações de entrega - no modelo, entende-se que cada entrega é feita para uma entidade federativa, e o tipo do destino dependerá da informação cadastrada. Um outro exemplo se dá nas informações sobre casos e óbitos, onde alguns dados dizem respeito aos países e outros aos estados ou municípios. 
+
+
+
+indivíduo, paciente
+
+
+pessoa
+CPF - NU_CPF : CHAR(12)
+nome - NM_PACIENT : NOME
+sexo - CS_SEXO : CHAR(1)
+data_nascimento - DT_NASC : DATA
+idade - NU_IDADE_N : INT
+tipo_idade - TP_IDADE : INT
+raça_cor - CS_RACA : CHAR(8)
+escolaridade - CS_ESCOL_N : CHAR(12)
+ocupação - PAC_COCBO : CHAR(6)
+CEP - NU_CEP : INT
+município : ID_MN_RESI ou CO_MUN_RES : INT (chave estrangeira - município)
+estado - SG_UF : INT (atributo derivado de município)
+bairro - NM_BAIRRO : LOCAL
+rua - NM_LOGRADO : LOCAL 
+numero - NU_NUMERO : INT
+complemento - NM_COMPLEM : LOCAL
+zona - CS_ZONA : CHAR(10)
+país
+
+
+paciente
+código - INT
+gestante - CS_GESTANT - BOOL (simplificado)
+evol_sg_srag - SURTO_SG : BOOL
+nosocomial - NOSOCOMIAL : BOOL
+contato_suíno_ave - AVE_SUINO : BOOL
+contato_outro_animal - OUT_ANIM : TEXTO
+data_vacina_gripe - (VACINA + DT_UT_DOSE) : DATA
+data_vacina_mae - (MAE_VAC + DT_VAC_MAE) : DATA
+amamentação - MT_AMAMENTA : BOOL
+data_dose_unica - DT_DOSEUNI : DATA
+data_primeira_dose - DT_1_DOSE : DATA
+data_segunda_dose - DT_2_DOSE : DATA
+criterio_encerramento - CRITERIO : CHAR(30)
+evolução_caso - EVOLUCAO : CHAR(30)
+data_alta_obito - DT_EVOLUCAO : DATA
+data_encerramento - DT_ENCERRA : DATA
+
+viagem_internacional
+código - INT (chave estrangeira - paciente)
+país - PAIS_VGM ou CO_PS_VGM : INT
+local - LO_PS_VGM : LOCAL
+data_ida - DT_VGM : DATA
+data_volta - DT_RT_VGM : DATA
+
+sintoma (Essa tabela sintoma vai ser criada a partir das sub-entradas do ítem 35 do arquivo SRAG)
+código - INT (chave estrangeira - paciente)
+nome : NOME
+descrição : TEXTO
+
+fator_de_risco (Essa tabela fator_de_risco vai ser criada a partir das sub-entradas do ítem 36 do arquivo SRAG)
+código - INT (chave estrangeira - paciente)
+nome : NOME
+descrição : TEXTO
+
+antiviral
+código - INT (chave estrangeira - paciente)
+nome - (TP_ANTIVIR + OUT_ANTIV) : NOME 
+data_inicio - DT_ANTIVIR : DATA
+
+raiox
+código : INT (chave estrangeira - paciente)
+data - DT_RAIOX : DATA
+resultado - (RAIOX_RES + RAIOX_OUT) : CHAR(30)
+
+tomografia
+código : INT (chave estrangeira - paciente)
+data - DT_TOMO : DATA
+resultado - (TOMO_RES + TOMO_OUT) : CHAR(30)
+
+coleta
+código : INT
+código_paciente : INT (chave estrangeira - paciente)
+data - DT_COLETA : DATA
+tipo - (TP_AMOSTRA + OUT_AMOST) : CHAR(30)
+
+internação
+código : INT
+data_entrada - DT_INTERNA : DATA
+data_entrada_UTI - (UTI + DT_ENTUTI) : DATA 
+data_saida_UTI - (DT_SAIDUTI) : DATA
+uso_suporte_respiratório - SUPORT_VEN : CHAR(12)
+
+pacientes_internados
+código_paciente : INT (chave estrangeira - paciente)
+código_internação : INT (chave estrangeira - internação)
+
+internação_locais
+código_internação : INT (chave estrangeira - internação)
+CNES : INT (chave estrangeira, estabelecimento_de_saude)
+
+teste_antigenico
+codigo : INT
+coleta : INT (chave estrangeira - coleta)
+data_resultado - DT_RES_AN : DATA
+tipo - TP_TES_AN : CHAR(20)
+resultado_final - (CLASSI_FIN + CLASSI_OUT) : CHAR(20)
+resultado_antigênico - RES_AN : CHAR(20)
+influenza - (POS_AN_FLU + TP_FLU_AN) : CHAR(1)
+sars_cov_2 - (POS_AN_OUT + AN_SARS2) : CHAR(1)
+vsr - (POS_AN_OUT + AN_VSR) : CHAR(1)
+parainfluenza1 - (POS_AN_OUT + AN_PARA1) : CHAR(1)
+parainfluenza2 - (POS_AN_OUT + AN_PARA2) : CHAR(1)
+parainfluenza3 - (POS_AN_OUT + AN_PARA3) : CHAR(1)
+adenovirus - (POS_AN_OUT + AN_ADENO) : CHAR(1)
+outro_virus - (POS_AN_OUT + AN_OUTRO) : CHAR(30)
+
+teste_rtcpcr
+codigo : INT
+coleta : INT (chave estrangeira - coleta)
+data_resultado - DT_PCR : DATA
+resultado_final - (CLASSI_FIN + CLASSI_OUT) : CHAR(20)
+resultado_ptpcr - PCR_RESUL : CHAR(20)
+influenza - (POS_PCR_FLU + TP_FLU_PCR) : CHAR(1)
+influenza_subtipo - (POS_PCR_FLU + PCR_FLUASU) : CHAR(30)
+influenza_linhagem - (POS_PCR_FLU + PCR_FLUBLI) : CHAR(15)
+sars_cov_2 - (POS_PCR_OUT + PCR_SARS2) : CHAR(1)
+vsr - (POS_PCR_OUT + PCR_VSR) : CHAR(1)
+parainfluenza1 - (POS_PCR_OUT + PCR_PARA1) : CHAR(1)
+parainfluenza2 - (POS_PCR_OUT + PCR_PARA2) : CHAR(1)
+parainfluenza3 - (POS_PCR_OUT + PCR_PARA3) : CHAR(1)
+parainfluenza4 - (POS_PCR_OUT + PCR_PARA4) : CHAR(1)
+adenovirus - (POS_PCR_OUT + PCR_ADENO) : CHAR(1)
+metapneumovirus - (POS_PCR_OUT + PCR_METAP) : CHAR(1)
+bocavirus - (PAR_PCR_OUT + PCR_BOCA) : CHAR(1)
+rinovirus - (PAR_PCR_OUT + PCR_RINO) : CHAR(1)
+outro - (PAR_PCR_OUT + PCR_OUTRO + DS_PCR_OUT) : CHAR(30)
+
+
+teste_sorológico
+codigo : INT
+coleta : INT (chave estrangeira - coleta)
+data_resultado - DT_RES : DATA
+resultado_final - (CLASSI_FIN + CLASSI_OUT) : CHAR(20)
+tipo_amostra - TP_AM_SOR : CHAR(20)
+tipo_sorologia - (TP_SOR + OUT_SOR) : CHAR(100)
+resultado_sorologia - RES_SOR : CHAR(20)
+resultado_igg - RES_IGG : CHAR(1)
+resultado_iga - RES_IGA : CHAR(1)
+resultado_igm - RES_IGM : CHAR(1)
+
+
+realização_antigênico_laboratório
+CNES - CO_LAB_AN : INT (chave estrangeira - estabelecimento_de_saude)
+codigo : INT (chave estrangeira - teste_antigenico)
+
+realização_rtcpcr_laboratório
+CNES - (LAB_PCR ou CO_LAB_PCR) - INT (chave estrangeira - estabelecimento_de_saude)
+codigo : INT (chave estrangeira - teste_rtcpcr)
