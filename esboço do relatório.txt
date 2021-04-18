@@ -1,0 +1,232 @@
+O design da base de dados se deu pela abordagem top-down, partindo de entidades que existem naturalmente no problema e estavam presentes nos dados disponibilizados. A identificação destas entidades permite um primeiro nível de decomposição dos dados, ao passo que de modo geral, todas as informações disponibilizadas estavam agregadas em um único arquivo '.csv', reunindo diversas entidades que poderiam ser separadas, o que implica em redundância de informação. Tendo um primeiro modelo contendo as entidades "intuitivas", é possível refinar o modelo com análise de normalidade e decomposições subsequentes.
+
+O principal objetivo era reunir em um único modelo um conjunto de informações até então separadas, como os dados de entregas de medicamentos, respiradores e outros ítens, que foram modeladas em um único conjunto de entidades descrevendo a entrega de ítens (sem especificação a priori). De posse de um modelo que agregue todas estas informações torna-se mais fácil realizar um cruzamento de dados não somente para apresentação mas também para análise. Algumas fontes de informações são complementares, no sentido de que diferem no nível de detalhamento, apesar de visarem divulgar o mesmo tipo de informação, como número de casos suspeitos, confirmados e óbitos. Por exemplo, algumas fontes disponibilizam o registro diário de novos casos confirmados, suspeitos e de óbitos para cada estado ou município. Pode-se obter com isso informações sobre quais as regiões mais afetadas por casos de Síndrome Respiratória Aguda Grave - SRAG -, tendo em vista a impossibilidade de confirmar todas as suspeitas de covid, porém não há qualquer informação demográfica ou logística das regiões, o que pode ser resolvido pela inclusão das informações de registros específicos de SRAG que contém informações detalhadas dos seus pacientes e evolução dos casos, e também das informações de repasses e compras de ítens.
+
+Essa reunião de informações gera o problema de possíveis inconsistências, ao passo que, sendo informações de fontes diferentes e com protocólos de registro diferentes, pde haver divergências nos números. Porém, mais uma vez, ter as informações reunidas em um só lugar pode facilitar a remoção de incosistências, com potenciais ajustes no modelo para filtrar as entidades e relações que se mostrem espúrias.
+
+Não menos importantes, a tentativa de reunir informações de fontes díspares em um mesmo modelo se mostra um desafio interessante à luz do contexto atual, onde há vasta quantidade de informações disponíveis online e que carecem de uma estruturação adequada e necessária a fim de torná-las úteis para análise.
+
+
+
+Descrição da Base de Dados
+
+As tabelas do banco estão organizadas em um conjunto de esquemas, quais sejam: 
+
+entregas
+    - registro_entrega
+    - ítem
+
+localidades
+    - ente_federativo
+    - país
+    - estado
+    - município
+    - cnes_município
+    - entregas_realizadas
+    - endereço
+
+relatórios
+    - registro_diário_cartório
+    - registro_acumulado_cartório
+    - relatório_covid
+    - registro 
+
+
+dados_globais
+    - informações_globais_mortes
+    - informações_globais_casos
+    - informações_globais_testes
+    - informações_globais_vacinações
+    - informações_globais_hospitalizações
+
+dados hospitalares 
+    - estabelecimento de saude
+
+individuos
+    - pessoa 
+
+srag
+    - pessoa_paciente
+    - paciente
+    - viagem_internacional
+    - sintomas
+    - fator_de_risco 
+    - antiviral 
+    - raiox
+    - tomografia
+    - coleta
+    - teste
+    - pacientes_internados
+    - internação
+    - internações locais 
+    - realização_antigênico_laboratório
+    - realização_rtcpcr_laboratório
+    - teste_antigênico
+    - teste_rtcpcr
+    - teste_sorológico
+
+No que segue, as tabelas de cada esquema serão explicadas quanto a sua função e às formas normais que atendem.
+
+- Dados Globais
+
+Em todos os casos, as chaves candidatas são os campos "data" e "país", onde "país" é uma chave estrangeira (um código) oriunda da tabela "país". Estes dois campos permitem especificar univocamente cada relação da tabela, que consiste em um registro de certas informações para um dado dia, em cada país. Existem alguns campos com dados proporcionais, e.g. novos casos por milhão de habitantes. Estes campos são derivados, sendo obtidos considerando os dados demográficos de cada país. Ele poderia ser calculado facilmente por uma seleção destes dados do país correspondente (informações estas que, originalmente, estavam em uma mesma tabela).
+
+As tabelas deste esquema estão todas na quarta forma normal. De fato, todas as tabelas estão na segunda forma normal, uma vez que todas as informação são determinadas pelo dia de registro e local (data e país), e não existem relações transitivas entre as entradas da relação, portanto as tabelas também estão na terceira forma normal. Os campos "data" e "país" são os únicos atributos determinantes da relação, o que faz com que ela esteja na forma normal de Boyce-Codd, e não existem relações multivaloradas entre a chave candidata e outros campos da relação, então a relação está na quarta forma normal. Porém, as tabelas não estão na quinta forma normal pois não é o caso que exista outra chave candidata na relação além de "data" e "país".
+
+- relatórios
+
+O formato destas tabelas é equivalente ao formato utilizado nas tabelas do esquema "Dados Globais", diferindo apenas no fato de que não se utiliza a chave estrangeira "país" para construir a chave candidata, mas sim "estado", nas tabelas "registro_diário_cartório" e "registro_acumulado_cartório" e "ente_federativo" na tabela "relatório_covid". Neste último caso, se referencia a tabela "ente_federativo", que reúne informações de estados, municípios e países, pelo fato de que existem relatórios (com as mesmas informações) tanto para município quanto para estados. Seria possível ainda derivas informações equivalentes para os países, caso fosse possível obter todas as informações do relatório. Desse modo, não é necessário criar uma tabela para cada tipo de ente federativo e pode-se obter estes relatórios para um tipo de ente por uma junção com a tabela do tipo especificado. No caso da tabela "registro_de_ocupação", a chave primária composta é a "data" e o código CNES que identifica um estabelecimento de saúde; a função da tabela é reunir os registros diários de cada estabelecimento com respeito à sua situação de ocupação de leitos e saídas por óbito ou alta, com suspeita ou confirmação de COVID.
+
+Havendo esta equivalência com o esquema anterior, vale a análise de normalidade feita anteriormente, i.e. todas as tabelas estão na quarta forma normal.
+
+- localidades * 
+
+Neste esquema estão reunidas as tabelas com informações de estados, municípios e países, juntamente com a tabela "cnes_localização" que identifica o município onde as entidades de saúde estão localizadas e "entregas_realizadas" que identifica cada entrega com o seu local de destino. Qualquer outra tabela que realizasse este tipo de especificação seria colocada neste esquema. Também está neste esquema a tabela "endereço", que foi criada para possibilitar a normalização das tabelas "estabelecimento_de_saude" e "pessoa", a serem explicadas mais adiante. 
+
+As relações da tabela "endereço" são identificadas pelo CEP, contendo os atributos município (chave estrangeira da tabela "município"), rua, bairro, número e complemento.  A tabela está na segunda forma normal, ao passo todos os atributos dependem funcionalmente do CEP, entretanto não está na terceira, pois existem dependências transitivas (por exemplo, CEP determina rua, que determina bairro, estado e município). Seria possível normalizar esta tabela mas as informações de endereço ficam mais organizadas se reunidas em uma única tabela, portanto optou-se por manter a normalização apenas na segunda forma.
+
+Os três tipos de entes federativos foram reunidos em uma única tabela, "ente_federativo", para facilitar a referência quando alguma outra tabela se relacionasse com mais de um tipo de ente federativo. A chave primária foi determinada por um ID numérico; os IDs disponibilizados pelo IBGE são números de 7 dígitos, no caso dos municípios, e de 2 dígitos no caso dos estados. Para incluir os países, basta enumerá-los com valores de três dígitos, de modo que todos os entes federativos passam a ter um código único.
+
+A fim de diferenciá-los, foi feita três tabelas, uma para cada tipo, contendo os IDs de cada ente, permitindo a consulta filtrada por país, estado ou município.
+
+As informações incluídas na tabela "ente_federativo" são comuns para todos os tipos, como densidade demográfica ou PIB per capita, então não ocorre (idealmente) de haver campos vazios para todos os ítens de um tipo.
+
+Cada relação é identificada unicamente pelo seu ID. Não é possível fazer essa identificação pelo nome devido a existência de municípios homônimos (caso tirássemos os dados municipais, poderíamos utilizar o atributo nome como chave primária). Na realidade, as únicas chaves candidatas são o ID ou a chave trivial (i.e. toda a relação), e não existem relações transitivas, portanto todos são unicamente dependentes da chave primária. Além disso, não existem relações multivaloradas - no caso da tabela "municípios" existe, além do ID do município, o atributo "estado" com o ID do estado ao qual o município pertence, e sendo o ID do município a chave primária da relação, cada ID municipal identifica um único estado. Dessa forma, as tabelas deste esquema estão todos na quarta forma normal (e da 1 à de Boyce-Codd, necessariamente).
+
+- entregas
+
+As tabelas deste esquema foram modeladas para reunir as informações de diferentes tipos de entregas, que originalmente são oriundas de diferentes fontes de informação. Os vários tipos de ítens a serem entregues serão armazenados na tabela "ítem", sendo criada uma única relação para cada novo ítem adicionado, com uma chave artificial gerada pelo sistema. Para inserir informações nesta tabela, todas as tabelas de entregas originais foram processadas, separando todos os ítens únicos, adequando suas informações ao modelo para serem inseridas no banco. 
+
+É possível que um mesmo ítem seja disponibilizado por mais de um fornecedor, ou pode estar vinculado a um programa de entregas diferente (atributo "vínculo"), ou mesmo diferir em algum detalhe (atributos "descrição" e "tipo") da sua especificação, por isso a necessidade de criar uma chave artificial para registrar cada ítem. A necessidade de armazenar estas informações está no fato de que pode haver múltiplas entregas de um mesmo ítem, e as informações da entrega, como quantidade e preço total, ficam armazenadas na tabela "registro_entrega".
+
+Para a tabela "registro_entrega" também foi gerada uma chave artificial. Naturalmente, as informações tais como valor total, quantidade, etc. não podem ser utilizadas para identificar uma relação, e para dar conta da possibilidade de várias entregas em uma mesma data (dia), optou-se por gerar uma chave artificial. O ítem entregue é uma chave estrangeira se referindo à tabela "ítem". Tendo isso em mente, não existem relações transitivas na relação, e todos os atributos dependem da chave primária, portanto a tabela está na segunda e terceira forma normal. Pelo que foi discutido, os únicos determinantes são as chaves artificiais, portanto as tabelas também estão na forma normal de Boyce-Codd. Por fim, pela mesma razão exposta, de que há um único determinante (e portanto uma única relação funcional para com o ID), não existem dependência funcionais multivaloradas, logo, as tabelas estão na quarta forma normal.
+
+- dados hospitalares 
+
+Este esquema possui uma única tabela, "estabelecimento_de_saúde". A decisão de criar um esquema para esta tabela se dá para não deixar nenhuma tabela fora de um esquema, já que todas as outras foram organizadas em esquemas, e para possibilitar a inserção coerente de novas tabelas que possam estar semanticamente próximdas das informações de estabelecimentos de saúde.
+
+A tabela reúne as informações de nome e localização de estabelecimentos de saúdes, o que inclui hospitais, clínicas e laboratórios, identificados pelo código CNES, que é a chave primária. 
+
+As informações de município e estado não estão contidas nesta tabela pois o cruzamento dos IDs municipais com o CNES são feitos em uma tabela independente, "cnes_localização", o que dá conta da relação de M por N entre estabelecimentos e municípios. Isso contribui para reduzir a redundância de informação.
+
+A tabela está na quarta forma normal. Todos os atributos dependem funcionalmente da chave primária, o CNES, não havendo relação transitiva entre os atributos. O nome não é determinante devido a existência de estabelecimentos homônimos. Tanto o CEP quanto o CNES são determinantes e chaves candidatas e, por fim, não há relações funcionais multivaloradas.
+
+- individuos
+
+Neste esquema está a tabela "pessoa". A tabela reúne todas as informações detalhadas de pessoas, que foram utilizadas de algum modo por alguma outra tabela. Neste contexto, até o momento apenas as informações de pacientes com síndrome respiratória utilizaram as informações de indivíduos. As informações de pacientes e de pessoas foram separadas a fim de não reduzir os dados individuais a um único contexto. 
+
+A chave da tabela é o CPF. As únicas dependências funcionais que existem é entre cada atributo e o CPF, não havendo dependência entre os atributos. Isso garante a normalização na segunda forma e também na terceira, por não haver transitividade. Garante também a normalização na forma Boyce-Codd, pois há um único determinante. Seria possível argumentar que o CEP é um determinante da "zona" (rural, urbana, etc.), porém, não havendo no momento um meio de especificar como se dá essa relação, i.e. quais CEPs estão em quais grupos, consideramos que CEP não é determinante. Além do mais, não há relações funcionais multivaloradas pois a relação dos dados com o CPF é, naturalmente, 1 para 1, assim, também temos normalização na quarta forma. 
+
+- srag
+
+Este esquema reúne as tabelas que modelam as informações de pacientes com Síndrome Respiratória Aguda Grave (SRAG). Essas informações são disponibilizadas a partir de um programa governamental que já atuava antes da pandemia, e desde 2020 passou a reunir também informações relativas ao COVID. A principal vantagem desta base é o nível de detalhamento dos pacientes, contemplando informações demográficas, as condições físicas do paciente no momento do registro como sintomas e fatores de risco, se realizou viagem ou se teve contato com áves e suínos, e se recebeu vacina da gripe, entre outras. Contém também informações dos testes que foram feitos e seus resultados, e detalhes de internação.
+
+Começando pela tabela "paciente", sua chave primária é um código gerado automaticamente a cada registro. Este código será vinculado a uma pessoa pela tabela "registro_pacientes", possibilitando registros de múltiplas entradas de uma mesma pessoa como paciente de SRAG. Cada paciente terá informações de gestação, evolução da doença, se houve contato com suínos, aves ou outros animais, se foi realizada a vacinação e se foram feitas as vacinações previstas para a infância, no caso onde o paciente tem entre 3 e 8 anos. O fato da tabela conter campos que são específicos para alguns tipos de pacientes (e.g. mulheres e crianças) possibilita a existência de vários registros com múltiplos campos nulos, porém diante da necessidade de ter estas informações específicas e da dificuldade desnecessária de separar estas informações em tabelas e entidades próprias, paga-se o custo do espaço inutilizado. Por fim, contém as informações finais do paciente, especificando a evolução do caso (para alta ou óbito) e sua data, e também a data de encerramento do registro. Todas estas informações são independentes entre si, havendo relação funcional apenas entre estes atributos e o código. Seguindo a mesma lógica das análises anteriores, esta tabela está na quarta forma normal.
+
+Cada paciente possui uma série de atributos multivalorados e compostos, quais sejam: realização de viagens internacionais, sintomas, fatores de risco, aplicação de antivirais, realização de raio-x e tomografia, coleta de material biológico, aplicação de testes e realização de internações. Cada um destes ítens corresponde a uma tabela, de modo a dar conta das relações 1 para N. Não sendo entidades, nenhuma destas tabelas possui chave primária, contendo apenas as relações entre o paciente (identificado pelo seu código, que passa a ser chave estrangeira) e as informações destes atributos multivalorados. Podemos falar, entretanto, das chaves candidatas.
+
+Na tabela "viagem_internacional", os pares "código"/"data_ida" e "código"/"data_volta" são chaves candidatas, já que nenhum indivíduo faz duas viagens (partindo do Brasil) no mesmo dia (na realidade, esse caso é tecnicamente possível, mas tendo em vista que estes registros objetivam identificar quais indivíduos estiveram em algum outro país antes dos sintomas, podemos simplificar o modelo supondo que há apenas uma viagem internacional por dia). As chaves candidatas são determinantes do país, que por sua vez determina o local. O atributo "data_ida" não é determinado por "data_volta" e nem o contrário. Por conta disso, essa tabela não está na segunda forma normal, pois não ocorre de todos os atributos estarem em uma relação funcional com as chaves. Como no caso da tabela de endereços, considera-se que manter a tabela com estas informações reunidas faz mais sentido para o modelo, portanto ela será mantida na primeira forma normal. 
+
+Na tabela "sintomas", a única chave candidata é a trivial. Isto porque o campo "descrição" tem o propósito de adicionar detalhes a um dado sintoma, então concebe-se a possibilidade de entradas com um mesmo nome e diferentes descrições. Pelo mesmo motivo, a chave da tabela "fator_de_risco" é a trivial. Na tabela "antiviral", admite-se a possibilidade de início em um mesmo dia de múltiplos antivirais, portanto não poderíamos tomar "código" e "data_início" como chave candidata, restando apenas a trivial, e podemos aplicar o mesmo raciocínio às tabelas "raiox" e "tomografia".
+
+A tabela "coleta" possui uma chave primária "código" gerada artificialmente para que seja possível referenciar cada coleta com um teste, se necessário. Esse cruzamento é feito na tabela "teste", com duas chaves estrangeiras "código_coleta" e "código_teste". Os atributos da tabela "coleta" são o código do paciente, a data da coleta e o tipo (de material biológico), e nenhum destes atributos é determinante para nenhum outro, estando todos em uma relação funcional apenas com o código gerado. Por uma lógica similar à aplicada a diversos casos anteriores, a tabela "coleta" está na quarta forma normal.
+
+A tabela "pacientes_internados" faz o cruzamento entre o código do paciente e o código da internação. A chave primária da tabela "internação" é também gerado artificialmente, por motivo similar ao que foi dado para a tabela "coleta". As relações de internação contém a data de entrada na internação, datas de entrada e saída da UTI, e um indicador de uso de suporte respiratório (que podem ser nulos). Observa-se que nenhum destes atributos é determinante de nenhum outro, por isso a necessidade de uma chave artificial.
+
+A indicação do local de internação é feita na tabela "internações_locais", que cruza o código de internação com o CNES do estabelecimento de saúde. 
+
+Em relação aos testes, são três tipos distintos: antigênico, RTC-PCR e sorológico. Para cada tipo existe uma tabela, com chave primária dada por um código artificial. Cada teste tem sua coleta correspondente identificada na tabela "teste" que relaciona o código da coleta com o do teste. Os testes antigênico e RTC-PCR envolvem estudo laboratorial, e os códigos destes dois testes são relacionados ao CNES do laboratório pelas tabelas "realização_antigênico_laboratório" e "realização_rtcpcr_laboratório", respectivamente.
+
+As três tabelas foram modeladas como especializações de uma entidade geral "Teste", portanto compartilham alguns campos, quais sejam: "coleta" e "data_resultado". O vírus passíveis de identificação pelo teste antigênico formam um subconjunto dos vírus identificáveis pelo teste RTC-PCR, e fora os atributos identificadores dos vírus identificados, existem os campos identificando o tipo de análise conduzida e o resultado. Mais uma vez, a necessidade de um código artificial surge ao notarmos que nenhum destes atributos pode formar uma chave candidata.
+
+
+*** Principais Operações do Banco
+
+    - Visualização de dados por país, e regiões administrativas (estados, cidades, etc.).
+
+        - por país
+            - mortes:
+                - P_(data, novos)[S_(país = X)[informações_globais_mortes]]
+                - P_(data, quantidade_total)[S_(país = X)[informações_globais_mortes]]
+            - casos:
+                - P_(data, novos)[S_(país = X)[informações_globais_casos]]
+                - P_(data, quantidade_total)[S_(país = X)[informações_globais_casos]]
+            - testes:
+                - P_(data, novos)[S_(país = X)[informações_globais_testes]]
+                - P_(data, quantidade_total)[S_(país = X)[informações_globais_testes]]
+            - vacinações:
+                - P_(data, novos)[S_(país = X)[informações_globais_vacinações]]
+                - P_(data, quantidade_total)[S_(país = X)[informações_globais_vacinações]]
+            - hospitalizações:
+                - P_(data, novos)[S_(país = X)[informações_globais_hospitalizações]]
+                - P_(data, quantidade_total)[S_(país = X)[informações_globais_hospitalizações]]
+                - P_(data, pacientes_uti)[S_(país = X)[informações_globais_hospitalizações]]
+
+
+        - por estado :
+                - (registro de ocupação)
+                    - P_(data, informação desejada)[P_(CNES)[P_(CEP)[S_(estado = X)[endereço]] JOIN_(CEP) estabelecimento_de_saude] JOIN_(CNES) registro_de_ocupação]
+                - (registro de cartório)
+                    - P_(data, informação desejada)[P_(ID)[S_(nome = X)[ente_federativo]] JOIN_(ID = estado) registro_diário_cartório]
+                    - P_(data, informação desejada)[P_(ID)[S_(nome = X)[ente_federativo]] JOIN_(ID = estado) registro_acumulado_cartório]
+                    - P_(data, informação desejada)[P_(ID)[S_(nome = X)[ente_federativo]] JOIN_(ID = estado) relatório_covid]
+
+        - por município :
+                - (registro de ocupação)
+                    - P_(data, informação desejada)[P_(CNES)[P_(CEP)[S_(município = X)[endereço]] JOIN_(CEP) estabelecimento_de_saude] JOIN_(CNES) registro_de_ocupação]
+                - (registro de cartório)
+                    - P_(data, informação desejada)[P_(ID)[S_(nome = X)[ente_federativo]] JOIN_(ID = estado) relatório_covid]
+
+
+        - Entregas:
+            - por estado
+                - entregas por estado: P_(código)[(Estado JOIN_(ID) entregas_realizadas)] 
+            - por município
+                - entregas por município: P_(código)[(Município JOIN_(ID) entregas_realizadas)]
+
+            - Se eu quiser o valor total gasto com entregas?
+                - entregas_por_município: P_(nome, código)[P_(ID, nome)[Município JOIN_(ID) ente_federativo] JOIN_(ID) entregas_realizadas]
+                - F_(COUNT nome, SUM valor_total)(entregas_por_estado JOIN_(código) registro_entrega)
+                - Análogo para estado.
+
+            - Se eu quiser todas as entregas ainda não concluídas?
+                - S_(status = não entregue)[entregas_realizadas]
+                - Qual estado/município tem mais entregas pendentes?
+                    - F_(COUNT nome)[entregas_pendentes])
+
+            - Se eu quiser todas as entregas de medicamentos?
+                - entregas_de_medicamentos <- P_(ID)(S_(tipo = medicamento)[item]) JOIN_(item) registro_entrega
+                - Faz operaçÕes análogas às anteriores, mas com a tabela entregas_de_medicamentos.
+    
+            - Análogo para outros tipos de entregas (tipo, vínculo, etc).
+            
+            - Qual fornecedor tem mais entregas?
+                - F_(COUNT forenecedor)(registro_entrega NATURAL_JOIN item)
+                - Aplica "min" e "max" na tabela acima
+
+    - comparação das médias móveis
+        - globais (país):
+            - as médias ficarão armazenadas em uma tabela própria, indexada por país e data.
+            - para calculá-las, é necessário fazer uma consulta de toda a série temporal de novos "X" (mortes, testes, etc.) para calcular a série de média móvel, e aí ela será armazenada na tabela própria. Isso pode ser feito com uma função, e a função pode verificar a última data para calcular a última média móvel.
+
+    - indicação  de  países  com  maior/menor número  de  contaminações,  óbitos,  leitos hospitalares, etc.
+            - Aplicar "min" e "max" no seguinte:
+                - R_(país, total_mortes)F_(COUNT país, SUM novos)[P_(país, novos)[informações_globais_mortes]] * aqui poderia pegar a última entrada em "total"
+                - R_(país, total_casos)F_(COUNT país, SUM novos)[P_(país, novos)[informações_globais_casos]]
+                - R_(país, total_testes)F_(COUNT país, SUM novos)[P_(país, novos)[informações_globais_testes]]
+                - R_(país, total_vacinações)F_(COUNT país, SUM novos)[P_(país, novos)[informações_globais_vacinações]]
+                - R_(país, total_hospitalizações)F_(COUNT país, SUM novos)[P_(país, novos)[informações_globais_hospitalizações]]
+
+
+
+
+
+*** Dificuldades
+
+Não foram incluídas informações detalhadas das campanhas de vacinação municipais e estaduais. Os dados disponibilizados possuíam informações demográficas similares àquelas disponibilizadas pela pesquisa de SRAG, porém sem identificação do indivíduo, i.e. CPF e nome. Isso dificultaria a inclusão destes dados no modelo (sem perda de informação), pois poderia haver repetição dos dados demográficos oriundos da vacinação com aqueles de síndromes gripais, causando distorção. Uma possibilidade seria remodelar a entidade "Pessoa", separando-a em duas, uma com informações identificadoras (nome, cpf, etc.) e outras com informações gerais (idade, endereço, etc.), com a possibilidade de relacionar as informações das duas tabelas. Porém, este método não pareceu muito elegante, e não houve tempo hábil para pensar em possíveis problemas que este modelo acarretaria. Portanto, optou-se por não incluir estes dados.
+
+Já mencionado anteriormente, 
+
+
+ 
+
