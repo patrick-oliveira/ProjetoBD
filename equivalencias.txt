@@ -61,7 +61,7 @@ país : INT (chave estrangeira - país)
 data - date : DATA
 novos - new_vaccinations : INT
 quantidade_total - total_vaccinations : INT
-total_por_centena - total_vaccinations_per_handred : FLOAT
+total_por_centena - total_vaccinations_per_hundred : FLOAT
 pessoas_total_vac - people_vaccinated : INT
 pessoas_total_vac_por_cen - people_vaccinated_per_hundred : FLOAT
 
@@ -69,7 +69,6 @@ pessoas_total_vac_por_cen - people_vaccinated_per_hundred : FLOAT
 informações_globais_hospitalizações
 país : INT (chave estrangeira - país)
 data - date : DATA
-novos : INT
 quantidade_total - hosp_patients : INT
 pacientes_UTI - icu_patients : INT
 pacientes_UTI_por_milhão - icu_patients_per_million : FLOAT
