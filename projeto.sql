@@ -1,4 +1,4 @@
--- É possível criar as tabelas na ordem em que elas aparecem.
+-- ï¿½ possï¿½vel criar as tabelas na ordem em que elas aparecem.
 
 create table ente_federativo(
 	ID int,
@@ -8,7 +8,7 @@ create table ente_federativo(
 	primary key(ID)
 );
 
--- Obs: foi necessario adicionar o constraint para poder fazer referência ao ID da especizalização
+-- Obs: foi necessario adicionar o constraint para poder fazer referï¿½ncia ao ID da especizalizaï¿½ï¿½o
 -- a partir de outras tabelas. Isso quando uma chave estrangeira aponta para outra chave estrangeira...
 create table estado(
 	ID int,
@@ -32,7 +32,7 @@ create table pais(
 
 create table informacoes_globais_mortes(
 	paisID int,
-	datas date not null, -- escrito "datas" pois "data" é palavra reservada.
+	datas date not null, -- escrito "datas" pois "data" ï¿½ palavra reservada.
 	novos int,
 	quantidade_total int,
 	novos_por_milhao float,
@@ -140,7 +140,7 @@ create table registro_entrega(
 	status varchar(30),
 	destinatario varchar(200),
 	valor_total float,
-	quantidade float, -- float, líquido pode ser em litros?
+	quantidade float, -- float, lï¿½quido pode ser em litros?
 	data_entrega date,
 	primary key (entregaCodigo),
 	foreign key (itemID) references item(itemID)
@@ -154,7 +154,7 @@ create table entregas_realizadas(
 );
 
 create table registro (
-	codigo int, -- ou é string? (ex p5Ez41Zu6B).
+	codigo int, -- ou ï¿½ string? (ex p5Ez41Zu6B).
 	dataRegistro date,
 	clinica_ocup_suspeita int,
 	clinica_ocup_confirmado int,
@@ -170,13 +170,7 @@ create table registro (
 create table estabelecimento_de_saude(
 	CNES char(7), -- Inicialmente feito com int, mas depois pensei nos 0s a esquerda.
 	nome varchar(200) not null,
-	cep varchar(9), -- xxxxx-xxx ou xxxxxxxx
-	municipioId int,
-	estadoId int,
-	rua varchar(100),
-	numero smallint,
-	bairro varchar(100),
-	complemento text,
+	cep varchar(8), -- xxxxx-xxx ou xxxxxxxx
 	primary key (CNES)
 );
 
@@ -185,13 +179,6 @@ create table registro_de_ocupacao(
 	codigo int,
 	foreign key (CNES) references estabelecimento_de_saude(CNES),
 	foreign key (codigo) references registro(codigo)
-);
-
-create table cnes_localizacao(
-	CNES char(7),
-	municipioID int,
-	foreign key (CNES) references estabelecimento_de_saude(CNES),
-	foreign key (municipioID) references municipio(ID)
 );
 
 create table pessoa(
@@ -211,7 +198,7 @@ create table pessoa(
 	complemento text,
 	telefone varchar(20), --- varios formatos? possivelmente bigint(11). ex: 11234567899
 	tipo_idade varchar(30), --- x para ano, y para mes, z para dia?
-	ocupação varchar(30),
+	ocupaï¿½ï¿½o varchar(30),
 	zona varchar(10),
 	primary key (CPF),
 	foreign key (municipioId) references municipio(ID)
@@ -222,16 +209,16 @@ create table paciente(
 	gestante varchar(30),
 	evol_sg_srag varchar(20),
 	nosocomial varchar(20),
-	contato_suíno_ave varchar(20),
+	contato_suï¿½no_ave varchar(20),
 	contato_outro_animal varchar(60),
 	data_vacina_gripe date,
-	data_vacina_mãe date,
-	amamentação varchar(20),
+	data_vacina_mï¿½e date,
+	amamentaï¿½ï¿½o varchar(20),
 	data_dose_unica date,
 	data_primeira_dose date,
 	data_segunda_dose date,
 	criterio_encerramento varchar(30),
-	evolução_caso varchar(30),
+	evoluï¿½ï¿½o_caso varchar(30),
 	data_alta_obito date,
 	data_encerramento date,
 	primary key (codigo_paciente)
@@ -333,9 +320,9 @@ create table internacoes_locais(
 	foreign key (CNES) references estabelecimento_de_saude(CNES)
 );
 
---  Novamente, nas três tabelas abaixo foi necessário utilizar a restrição,
---  isso é, estamos assumindo que a chave estrangeira "código" nas tabelas abaixo
---  vão ser unicas.
+--  Novamente, nas trï¿½s tabelas abaixo foi necessï¿½rio utilizar a restriï¿½ï¿½o,
+--  isso ï¿½, estamos assumindo que a chave estrangeira "cï¿½digo" nas tabelas abaixo
+--  vï¿½o ser unicas.
 
 create table teste_antigenico(
 	codigo int,
@@ -343,7 +330,7 @@ create table teste_antigenico(
 	tipo varchar(30),
 	resultado_antigenico varchar(30),
 	influenza varchar(30),
-	sars_cov_2 varchar(10), -- sim ou não? bool?
+	sars_cov_2 varchar(10), -- sim ou nï¿½o? bool?
 	vsr varchar(10), 
 	parainfluenza1 varchar(10), 
 	parainfluenza2 varchar(10),
@@ -408,26 +395,26 @@ create table realizacao_rtcpcr_laboratorio(
 -- ####### ideias / propostas de consultas: #######
 -- ################################################
 
--- apenas ideias, não tenho certeza se está correto sem testar
+-- apenas ideias, nï¿½o tenho certeza se estï¿½ correto sem testar
 
--- mostrar os países com maior numero de mortes em ordem decrescente
--- seja "data_atual" a ultima data disponível no arquivo de dados (sem ela, seria preciso somar 
--- a coluna de "novos" para cada país?)
+-- mostrar os paï¿½ses com maior numero de mortes em ordem decrescente
+-- seja "data_atual" a ultima data disponï¿½vel no arquivo de dados (sem ela, seria preciso somar 
+-- a coluna de "novos" para cada paï¿½s?)
 
 select nome, quantidade_total
 from informacoes_globais_casos ifg natural join pais natural join ente_federativo 
 where ifg.datas = "data_atual"
 order by quantidade_total desc
 
--- mostrar o país com maior numero de mortes a cada milhão. (comparação com item acima?)
+-- mostrar o paï¿½s com maior numero de mortes a cada milhï¿½o. (comparaï¿½ï¿½o com item acima?)
 
 select nome, total_por_milhao
 from informacoes_globais_casos ifg natural join pais natural join ente_federativo 
 where ifg.datas = "data_atual"
 order by total_por_milhao desc
 
--- obter as informações (numero de casos, mortes, vacinações e hospitalizações) de cada país do início até os dias atuais.
--- fazer essa operação ficou trabalhoso demais?
+-- obter as informaï¿½ï¿½es (numero de casos, mortes, vacinaï¿½ï¿½es e hospitalizaï¿½ï¿½es) de cada paï¿½s do inï¿½cio atï¿½ os dias atuais.
+-- fazer essa operaï¿½ï¿½o ficou trabalhoso demais?
 
 select nome, C.datas, C.quantidade_total Casos, M.quantidade_total Mortes, H.quantidade_total Hospitalizacoes, V.quantidade_total Vacinacoes
 from (ente_federativo natural join pais) base, informacoes_globais_mortes M,
@@ -435,7 +422,7 @@ from (ente_federativo natural join pais) base, informacoes_globais_mortes M,
 where base.ID = C.paisID and base.id = M.paisID and base.ID = H.paisID and base.ID = V.paisID
 
 
--- obter as informações (numero de casos, mortes, vacinações e hospitalizações, etc...) TOTAL de cada estado do brasil
+-- obter as informaï¿½ï¿½es (numero de casos, mortes, vacinaï¿½ï¿½es e hospitalizaï¿½ï¿½es, etc...) TOTAL de cada estado do brasil
 -- mostrar do maior para o menor em numero de casos...
 
 select nome, casos_confirmados, mortes, pedidos_por_leito, taxa_mortalidade
@@ -448,8 +435,8 @@ order by casos_confirmados desc
 --################################################################
 -- ####### consultas que precisam de processamento em java? ######
 
--- obter as informações (numero de casos, mortes, vacinações e hospitalizações) de um país digitado pelo usuário,
--- mesmo para estado e município
+-- obter as informaï¿½ï¿½es (numero de casos, mortes, vacinaï¿½ï¿½es e hospitalizaï¿½ï¿½es) de um paï¿½s digitado pelo usuï¿½rio,
+-- mesmo para estado e municï¿½pio
 
--- obter informações de quantos leitos estão desocupados em um dado hospital
--- obter informações até uma dada data?
+-- obter informaï¿½ï¿½es de quantos leitos estï¿½o desocupados em um dado hospital
+-- obter informaï¿½ï¿½es atï¿½ uma dada data?
