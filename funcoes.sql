@@ -65,7 +65,106 @@ RETURNS TABLE (
 	END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION informacoes_casos_por_pais(nome_pais varchar(30))
+RETURNS TABLE (
+				datas date,
+				novos int,
+				quantidade_total int,
+				novos_por_milhao float,
+				total_por_milhao float
+			   ) AS $$
+	BEGIN
+		RETURN QUERY
+			WITH paises_info AS (
+				SELECT codigo, sigla, nome FROM pais NATURAL JOIN ente_federativo
+			)
 
+			SELECT informacoes_globais_casos.datas, informacoes_globais_casos.novos,
+				   informacoes_globais_casos.quantidade_total, informacoes_globais_casos.novos_por_milhao,
+				   informacoes_globais_casos.total_por_milhao
+			FROM 
+				(SELECT codigo FROM paises_info WHERE nome = nome_pais) AS codigo_pais
+				INNER JOIN informacoes_globais_casos
+					ON codigo_pais.codigo = informacoes_globais_casos.paisid;
+	END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION informacoes_mortes_por_pais(nome_pais varchar(30))
+RETURNS TABLE (
+				datas date,
+				novos int,
+				quantidade_total int,
+				novos_por_milhao float,
+				total_por_milhao float
+			   ) AS $$
+	BEGIN
+		RETURN QUERY
+			WITH paises_info AS (
+				SELECT codigo, sigla, nome FROM pais NATURAL JOIN ente_federativo
+			)
+
+			SELECT informacoes_globais_mortes.datas, informacoes_globais_mortes.novos,
+				   informacoes_globais_mortes.quantidade_total, informacoes_globais_mortes.novos_por_milhao,
+				   informacoes_globais_mortes.total_por_milhao
+			FROM 
+				(SELECT codigo FROM paises_info WHERE nome = nome_pais) AS codigo_pais
+				INNER JOIN informacoes_globais_mortes
+					ON codigo_pais.codigo = informacoes_globais_mortes.paisid;
+	END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION informacoes_testes_por_pais(nome_pais varchar(30))
+RETURNS TABLE (
+				datas date,
+				novos int,
+				quantidade_total int,
+				novos_por_milhar float,
+				total_por_milhar float,
+				taxa_positivos float,
+				testes_por_casos float
+			   ) AS $$
+	BEGIN
+		RETURN QUERY
+			WITH paises_info AS (
+				SELECT codigo, sigla, nome FROM pais NATURAL JOIN ente_federativo
+			)
+
+			SELECT informacoes_globais_testes.datas, informacoes_globais_testes.novos,
+				   informacoes_globais_testes.quantidade_total, informacoes_globais_testes.novos_por_milhar,
+				   informacoes_globais_testes.total_por_milhar, informacoes_globais_testes.taxa_positivos,
+				   informacoes_globais_testes.testes_por_casos
+			FROM 
+				(SELECT codigo FROM paises_info WHERE nome = nome_pais) AS codigo_pais
+				INNER JOIN informacoes_globais_testes
+					ON codigo_pais.codigo = informacoes_globais_testes.paisid;
+	END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION informacoes_vacinacao_por_pais(nome_pais varchar(30))
+RETURNS TABLE (
+				datas date,
+				novos int,
+				quantidade_total int,
+				total_por_centena float
+			   ) AS $$
+	BEGIN
+		RETURN QUERY
+			WITH paises_info AS (
+				SELECT codigo, sigla, nome FROM pais NATURAL JOIN ente_federativo
+			)
+
+			SELECT informacoes_globais_vacinacoes.datas, informacoes_globais_vacinacoes.novos,
+				   informacoes_globais_vacinacoes.quantidade_total, informacoes_globais_vacinacoes.total_por_centena
+			FROM 
+				(SELECT codigo FROM paises_info WHERE nome = nome_pais) AS codigo_pais
+				INNER JOIN informacoes_globais_vacinacoes
+					ON codigo_pais.codigo = informacoes_globais_vacinacoes.paisid;
+	END
+$$ LANGUAGE plpgsql;
+
+
+
+			   
 
 CREATE OR REPLACE FUNCTION municipios_por_estado(uf_sigla char(2))
 RETURNS TABLE (
@@ -89,6 +188,20 @@ $$ LANGUAGE plpgsql;
 
 			 
 -- SELECT * FROM registros_por_estado('Minas Gerais');
-SELECT * FROM municipios_por_estado('SP');
--- SELECT * FROM registros_por_municipio('São Paulo');
+-- SELECT * FROM municipios_por_estado('AC');
+-- SELECT * FROM registros_por_municipio('Acrelândia');
+-- SELECT * FROM informacoes_casos_por_pais('Brazil');
+-- SELECT * FROM informacoes_mortes_por_pais('Brazil');
+-- SELECT * FROM informacoes_testes_por_pais('Brazil');
+-- SELECT * FROM informacoes_vacinacao_por_pais('Brazil');
 
+WITH informacoes_casos_brazil AS(
+	SELECT * FROM informacoes_casos_por_pais('Brazil')
+)
+
+SELECT *,
+	AVG(novos) 
+	OVER(ORDER BY datas
+		 ROWS BETWEEN 6 PRECEDING AND CURRENT ROW)
+	AS movin_average
+FROM informacoes_casos_brazil;
