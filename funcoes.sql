@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION registros_por_estado(nome_input varchar(100))
+CREATE OR REPLACE FUNCTION registros_por_estado(sigla_input char(2))
 RETURNS TABLE (
 				dataregistro date,
 				clinica_ocup_suspeita int,
@@ -13,12 +13,11 @@ RETURNS TABLE (
 	BEGIN
 		RETURN QUERY
 			WITH CNES_UF AS (
-				SELECT cnes from
-					(SELECT * FROM
-						(SELECT ente_federativo.codigo FROM ente_federativo WHERE nome = nome_input) AS EF NATURAL JOIN estado) as UF
+				SELECT cnes FROM
+					(SELECT codigo FROM estado WHERE estado.sigla = sigla_input) AS UF_CODIGO
 					INNER JOIN 
 					endereco 
-						ON UF.codigo = estado
+						ON UF_CODIGO.codigo = endereco.estado
 					NATURAL JOIN
 					estabelecimento_de_saude
 			)
@@ -195,13 +194,12 @@ $$ LANGUAGE plpgsql;
 -- SELECT * FROM informacoes_testes_por_pais('Brazil');
 -- SELECT * FROM informacoes_vacinacao_por_pais('Brazil');
 
-WITH informacoes_casos_brazil AS(
+WITH informacoes_casos_pais AS(
 	SELECT * FROM informacoes_casos_por_pais('Brazil')
 )
 
-SELECT *,
-	AVG(novos) 
-	OVER(ORDER BY datas
-		 ROWS BETWEEN 6 PRECEDING AND CURRENT ROW)
+SELECT datas,
+	AVG(novos) OVER(ORDER BY datas
+		 		    ROWS BETWEEN 6 PRECEDING AND CURRENT ROW)
 	AS movin_average
-FROM informacoes_casos_brazil;
+FROM informacoes_casos_pais;
