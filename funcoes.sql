@@ -232,22 +232,22 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION total_registros_estados()
 RETURNS TABLE (
 				UF varchar(2),
-				total_ocupacao_suspeita int,
-				total_ocupacao_confirmado int,
-				total_UTI_suspeita int,
-				total_UTI_confirmado int,
-				total_obitos_suspeita int,
-				total_obitos_confirmado int,
-				total_altas_suspeita int,
-				total_altas_confirmado int
+				clinica_ocup_suspeita int,
+				clinica_ocup_confirmado int,
+				uti_ocup_suspeita int,
+				uti_ocup_confirmado int,
+				obitos_suspeita int,
+				obitos_confirmado int,
+				alta_suspeita int,
+				alta_confirmado int
 			   ) AS $$
 			   
 	BEGIN
 		RETURN QUERY
 			with registros_estado as (
-				select estado.sigla, dataregistro, clinica_ocup_suspeita, clinica_ocup_confirmado,
-					   uti_ocup_suspeita, uti_ocup_confirmado, obitos_suspeita, obitos_confirmado,
-					   alta_suspeita, alta_confirmado
+				select estado.sigla, registro.dataregistro, registro.clinica_ocup_suspeita, registro.clinica_ocup_confirmado,
+					   registro.uti_ocup_suspeita, registro.uti_ocup_confirmado, registro.obitos_suspeita, registro.obitos_confirmado,
+					   registro.alta_suspeita, registro.alta_confirmado
 					from 
 						estado inner join endereco
 							on estado.codigo = endereco.estado
@@ -283,14 +283,14 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION total_registros_municipios(UF_input char(2))
 RETURNS TABLE (
 				nome varchar(100),
-				total_ocupacao_suspeita int,
-				total_ocupacao_confirmado int,
-				total_UTI_suspeita int,
-				total_UTI_confirmado int,
-				total_obitos_suspeita int,
-				total_obitos_confirmado int,
-				total_altas_suspeita int,
-				total_altas_confirmado int
+				clinica_ocup_suspeita int,
+				clinica_ocup_confirmado int,
+				uti_ocup_suspeita int,
+				uti_ocup_confirmado int,
+				obitos_suspeita int,
+				obitos_confirmado int,
+				alta_suspeita int,
+				alta_confirmado int
 			   ) AS $$
 			   
 	BEGIN
