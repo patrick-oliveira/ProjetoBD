@@ -438,10 +438,3 @@ SELECT * FROM media_movel_mortes_pais('Brazil');
 -- SELECT * FROM total_registros_municipios('SP');
 -- SELECT * FROM informacoes_totais_globais();
 
-
-
-
-
-
-
-

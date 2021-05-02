@@ -61,7 +61,7 @@ create table informacoes_globais_testes(
 	taxa_positivos float,
 	testes_por_casos float,
 	foreign key (paisID) references pais(codigo),
-	foreign key (paisID, datas)
+	primary key (paisID, datas)
 );
 
 create table informacoes_globais_vacinacoes(
@@ -102,8 +102,7 @@ create table estabelecimento_de_saude(
 	CNES varchar(7), 
 	nome varchar(200) not null,
 	cep varchar(8),
-	primary key (CNES),
-	foreign key (cep) references endereco(CEP)
+	primary key (CNES)
 );
 
 create table registro (
@@ -179,7 +178,7 @@ create table registro_entrega(
 	descricao varchar(200),
 	tipo varchar(50),
 	fornecedor varchar(50),
-	primary key (entregaCodigo),
+	primary key (entregaCodigo)
 );
 
 create table entregas_realizadas(
